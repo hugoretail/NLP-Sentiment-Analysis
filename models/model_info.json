@@ -1,0 +1,63 @@
+{
+  "validation_metrics": {
+    "eval_loss": 0.005141692701727152,
+    "eval_model_preparation_time": 0.0054,
+    "eval_mse": 0.08226708322763443,
+    "eval_mae": 0.24448731541633606,
+    "eval_rmse": 0.28682238969026536,
+    "eval_r2": 0.39359134435653687,
+    "eval_accuracy": 0.7441719444818757,
+    "eval_accuracy_tolerance_1": 1.0,
+    "eval_mse_normalized": 0.005141692701727152,
+    "eval_mae_normalized": 0.061121828854084015,
+    "eval_runtime": 98.6566,
+    "eval_samples_per_second": 150.441,
+    "eval_steps_per_second": 4.703,
+    "epoch": 3.0
+  },
+  "test_metrics": {
+    "eval_loss": 0.005112840328365564,
+    "eval_model_preparation_time": 0.0054,
+    "eval_mse": 0.08180545270442963,
+    "eval_mae": 0.24269996583461761,
+    "eval_rmse": 0.2860165252296266,
+    "eval_r2": 0.39566469192504883,
+    "eval_accuracy": 0.7492925481741005,
+    "eval_accuracy_tolerance_1": 0.9998652472712573,
+    "eval_mse_normalized": 0.005112840794026852,
+    "eval_mae_normalized": 0.060674991458654404,
+    "eval_runtime": 99.6301,
+    "eval_samples_per_second": 148.971,
+    "eval_steps_per_second": 4.657,
+    "epoch": 3.0
+  },
+  "training_info": {
+    "model_name": "roberta-base",
+    "max_length": 512,
+    "batch_size": 16,
+    "learning_rate": 5e-05,
+    "num_epochs": 3,
+    "warmup_steps": 1000,
+    "weight_decay": 0.1,
+    "training_samples": 69260,
+    "validation_samples": 14842,
+    "test_samples": 14842,
+    "train_runtime": 7387.5463,
+    "final_train_loss": 0.006305194717086178,
+    "timestamp": "2025-08-19T13:20:57.129575",
+    "device": "cuda",
+    "corrections_applied": [
+      "Normalized labels [1,5] -> [0,1]",
+      "Removed incorrect sigmoid in metrics",
+      "Improved hyperparameters",
+      "Better weight initialization",
+      "Cosine LR scheduler",
+      "Proper denormalization in inference"
+    ]
+  },
+  "performance_validation": {
+    "mae_target_met": true,
+    "r2_target_met": true,
+    "accuracy_target_met": true
+  }
+}
