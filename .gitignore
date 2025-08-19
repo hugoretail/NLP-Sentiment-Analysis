@@ -1,0 +1,75 @@
+
+# Modèles de Machine Learning
+*.safetensors
+*.bin
+*.h5
+*.pkl
+*.joblib
+*.onnx
+model.safetensors
+pytorch_model.bin
+training_args.bin
+
+# Tokenizers volumineux
+tokenizer.json
+vocab.json
+
+# Données volumineuses
+*.csv
+*.tsv
+data/raw/
+data/processed/
+data/splits/
+datasets/
+
+# Archives et packages
+*.zip
+*.tar.gz
+*.rar
+*.7z
+colab_package/
+dist/
+
+# Cache et temporaires
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.cache/
+cache/
+logs/
+checkpoints/
+outputs/
+.pytest_cache/
+
+# Environnements
+.venv/
+venv/
+.env
+ENV/
+env.bak/
+venv.bak/
+
+# IDE et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+*.orig
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Build
+build/
+dist/
+*.egg-info/
