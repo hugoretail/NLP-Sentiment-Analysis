@@ -2,22 +2,331 @@
 Testing and evaluation script for sentiment analysis models.
 Provides comprehensive evaluation and visualization of trained models.
 """
-
 import os
 import sys
 import argparse
 import logging
 import json
-import pandas as pd
-import numpy as np
+import time
 from pathlib import Path
+from typing import Dict, List, Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+sys.path.insert(0, str(project_root))
 
-from utils.data_processor import DataProcessor
+from utils.inference import SentimentInference
 from utils.text_preprocessor import TextPreprocessor
+from utils.model_utils import SentimentModel, ModelManager
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class ModelTester:
+    """Comprehensive model testing and evaluation."""
+    
+    def __init__(self, model_path: str = None):
+        self.model_path = model_path
+        self.inference = SentimentInference(model_path)
+        self.preprocessor = TextPreprocessor()
+        self.results = {}
+        
+    def run_comprehensive_test(self):
+        """Run comprehensive model testing."""
+        print("🧪 Starting Comprehensive Model Testing")
+        print("=" * 50)
+        
+        # Basic functionality tests
+        self._test_basic_functionality()
+        
+        # Performance tests
+        self._test_performance()
+        
+        # Edge case tests
+        self._test_edge_cases()
+        
+        # Consistency tests
+        self._test_consistency()
+        
+        # Generate report
+        self._generate_report()
+        
+    def _test_basic_functionality(self):
+        """Test basic model functionality."""
+        print("\n📊 Testing Basic Functionality...")
+        
+        test_cases = [
+            ("I love this product! It's amazing!", "positive"),
+            ("This is terrible, I hate it completely.", "negative"),
+            ("It's okay, nothing special but adequate.", "neutral"),
+            ("Absolutely fantastic experience, highly recommend!", "positive"),
+            ("Worst purchase ever, complete waste of money.", "negative")
+        ]
+        
+        results = []
+        for text, expected_sentiment in test_cases:
+            result = self.inference.predict_single(text)
+            results.append({
+                'text': text,
+                'expected': expected_sentiment,
+                'predicted_score': result['score'],
+                'predicted_label': result['sentiment_label'],
+                'confidence': result['confidence']
+            })
+            
+            print(f"Text: '{text[:40]}{'...' if len(text) > 40 else ''}'")
+            print(f"  Expected: {expected_sentiment}")
+            print(f"  Predicted: {result['sentiment_label']} (score: {result['score']:.2f})")
+            print(f"  Confidence: {result['confidence']:.3f}")
+            print()
+            
+        self.results['basic_functionality'] = results
+        
+    def _test_performance(self):
+        """Test model performance and speed."""
+        print("\n⚡ Testing Performance...")
+        
+        # Single prediction speed
+        test_text = "This is a performance test for the sentiment analysis model."
+        
+        times = []
+        for _ in range(10):
+            start_time = time.time()
+            self.inference.predict_single(test_text)
+            times.append(time.time() - start_time)
+            
+        avg_time = sum(times) / len(times)
+        print(f"Average single prediction time: {avg_time:.3f}s")
+        
+        # Batch prediction speed
+        batch_texts = [f"Test text number {i} for batch processing." for i in range(50)]
+        
+        start_time = time.time()
+        batch_results = self.inference.predict_batch(batch_texts)
+        batch_time = time.time() - start_time
+        
+        print(f"Batch prediction time (50 texts): {batch_time:.3f}s")
+        print(f"Average per text in batch: {batch_time/len(batch_texts):.3f}s")
+        
+        self.results['performance'] = {
+            'single_prediction_time': avg_time,
+            'batch_prediction_time': batch_time,
+            'batch_size': len(batch_texts),
+            'avg_batch_per_text': batch_time/len(batch_texts)
+        }
+        
+    def _test_edge_cases(self):
+        """Test model with edge cases."""
+        print("\n🔍 Testing Edge Cases...")
+        
+        edge_cases = [
+            "",  # Empty string
+            "   ",  # Whitespace only
+            "a",  # Single character
+            "OK",  # Very short
+            "!" * 50,  # Repeated punctuation
+            "😀😀😀😀😀",  # Only emojis
+            "https://example.com",  # Only URL
+            "@user #hashtag",  # Only mentions and hashtags
+            "SHOUTING IN ALL CAPS!!!",  # All caps
+            "Can't won't shouldn't wouldn't",  # Contractions
+            "This is a very " + "long " * 30 + "text.",  # Very long text
+        ]
+        
+        edge_results = []
+        for text in edge_cases:
+            try:
+                result = self.inference.predict_single(text)
+                edge_results.append({
+                    'text': repr(text),
+                    'score': result['score'],
+                    'confidence': result['confidence'],
+                    'label': result['sentiment_label'],
+                    'success': True
+                })
+                print(f"✅ {repr(text)[:30]}... -> {result['sentiment_label']} ({result['score']:.2f})")
+            except Exception as e:
+                edge_results.append({
+                    'text': repr(text),
+                    'error': str(e),
+                    'success': False
+                })
+                print(f"❌ {repr(text)[:30]}... -> ERROR: {e}")
+                
+        self.results['edge_cases'] = edge_results
+        
+    def _test_consistency(self):
+        """Test model consistency."""
+        print("\n🔄 Testing Consistency...")
+        
+        test_texts = [
+            "This product is great!",
+            "I hate this service.",
+            "Average quality, nothing special."
+        ]
+        
+        consistency_results = []
+        for text in test_texts:
+            predictions = []
+            for _ in range(5):  # Run same text 5 times
+                result = self.inference.predict_single(text)
+                predictions.append(result['score'])
+                
+            std_dev = np.std(predictions) if len(predictions) > 1 else 0
+            avg_score = np.mean(predictions)
+            
+            consistency_results.append({
+                'text': text,
+                'predictions': predictions,
+                'average_score': avg_score,
+                'std_deviation': std_dev,
+                'consistent': std_dev < 0.1  # Consider consistent if std < 0.1
+            })
+            
+            print(f"Text: '{text}'")
+            print(f"  Predictions: {[f'{p:.2f}' for p in predictions]}")
+            print(f"  Average: {avg_score:.2f}, Std Dev: {std_dev:.3f}")
+            print(f"  Consistent: {'✅' if std_dev < 0.1 else '❌'}")
+            print()
+            
+        self.results['consistency'] = consistency_results
+        
+    def _generate_report(self):
+        """Generate comprehensive test report."""
+        print("\n📋 Test Report")
+        print("=" * 50)
+        
+        # Basic functionality summary
+        basic_results = self.results['basic_functionality']
+        print(f"\n🔧 Basic Functionality: {len(basic_results)} tests")
+        
+        # Performance summary
+        perf = self.results['performance']
+        print(f"\n⚡ Performance:")
+        print(f"  Single prediction: {perf['single_prediction_time']:.3f}s")
+        print(f"  Batch processing: {perf['avg_batch_per_text']:.3f}s per text")
+        
+        # Edge cases summary
+        edge_results = self.results['edge_cases']
+        successful_edges = sum(1 for r in edge_results if r['success'])
+        print(f"\n🔍 Edge Cases: {successful_edges}/{len(edge_results)} passed")
+        
+        # Consistency summary
+        consistency_results = self.results['consistency']
+        consistent_count = sum(1 for r in consistency_results if r['consistent'])
+        print(f"\n🔄 Consistency: {consistent_count}/{len(consistency_results)} consistent")
+        
+        # Overall assessment
+        print(f"\n📊 Overall Assessment:")
+        
+        performance_score = 100 if perf['single_prediction_time'] < 1.0 else 50
+        edge_score = (successful_edges / len(edge_results)) * 100
+        consistency_score = (consistent_count / len(consistency_results)) * 100
+        
+        overall_score = (performance_score + edge_score + consistency_score) / 3
+        
+        print(f"  Performance Score: {performance_score:.1f}%")
+        print(f"  Edge Case Score: {edge_score:.1f}%")
+        print(f"  Consistency Score: {consistency_score:.1f}%")
+        print(f"  Overall Score: {overall_score:.1f}%")
+        
+        if overall_score >= 80:
+            print("🎉 Excellent! Model is ready for production.")
+        elif overall_score >= 60:
+            print("✅ Good! Model performs well with minor issues.")
+        else:
+            print("⚠️  Needs improvement. Consider model retraining.")
+            
+    def export_results(self, filename: str = "model_test_results.json"):
+        """Export test results to file."""
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_numpy(obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return obj
+            
+        # Deep convert all numpy types
+        def deep_convert(data):
+            if isinstance(data, dict):
+                return {k: deep_convert(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                return [deep_convert(v) for v in data]
+            else:
+                return convert_numpy(data)
+                
+        converted_results = deep_convert(self.results)
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(converted_results, f, indent=2, ensure_ascii=False)
+            
+        print(f"\n💾 Results exported to {filename}")
+
+def run_quick_test():
+    """Run a quick functionality test."""
+    print("💨 Quick Model Test")
+    print("-" * 30)
+    
+    tester = ModelTester()
+    
+    # Quick test cases
+    quick_tests = [
+        "Great product!",
+        "Terrible quality.",
+        "It's okay."
+    ]
+    
+    for text in quick_tests:
+        result = tester.inference.predict_single(text)
+        print(f"'{text}' -> {result['sentiment_label']} ({result['score']:.2f})")
+        
+    print("\n✅ Quick test completed!")
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Test sentiment analysis model')
+    parser.add_argument('--model', type=str, help='Path to model directory')
+    parser.add_argument('--quick', action='store_true', help='Run quick test only')
+    parser.add_argument('--export', type=str, help='Export results to file')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        
+    if args.quick:
+        run_quick_test()
+        return
+        
+    # Run comprehensive test
+    tester = ModelTester(args.model)
+    tester.run_comprehensive_test()
+    
+    # Export results if requested
+    if args.export:
+        tester.export_results(args.export)
+
+if __name__ == "__main__":
+    # Import numpy here to avoid import errors in minimal environments
+    try:
+        import numpy as np
+    except ImportError:
+        print("Warning: NumPy not available, some features may be limited.")
+        # Create mock numpy for basic functionality
+        class MockNumPy:
+            def std(self, data): return 0.0
+            def mean(self, data): return sum(data) / len(data) if data else 0.0
+        np = MockNumPy()
+    
+    main()
 from utils.model_utils import ModelUtils, load_sklearn_model
 from utils.evaluation import (
     evaluate_model, calculate_metrics, plot_predictions_vs_actual,
