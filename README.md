@@ -1,4 +1,4 @@
-# 🎯 NLP Sentiment Analysis - Complete Project
+# 🎯 NLP Sentiment Analysis
 
 A comprehensive, production-ready sentiment analysis application using advanced machine learning and natural language processing to predict star ratings (1-5) from text reviews.
 Used database: [here](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment)
