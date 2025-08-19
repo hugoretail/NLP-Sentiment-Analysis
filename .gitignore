@@ -1,3 +1,5 @@
+# === FICHIERS VOLUMINEUX ABSOLUMENT EXCLUS ===
+# GitHub limite : 100MB par fichier, 1GB par dépôt
 
 # Modèles de Machine Learning
 *.safetensors
@@ -6,29 +8,66 @@
 *.pkl
 *.joblib
 *.onnx
+*.pth
+*.pt
 model.safetensors
 pytorch_model.bin
 training_args.bin
+tf_model.h5
+model.ckpt*
+checkpoint
 
 # Tokenizers volumineux
 tokenizer.json
 vocab.json
+vocab.txt
+merges.txt
+special_tokens_map.json
 
 # Données volumineuses
 *.csv
 *.tsv
+*.jsonl
+*.parquet
+*.feather
+*.hdf5
 data/raw/
 data/processed/
 data/splits/
 datasets/
+*.db
+*.sqlite
+*.sqlite3
 
 # Archives et packages
 *.zip
 *.tar.gz
+*.tar.bz2
 *.rar
 *.7z
+*.gz
+*.bz2
 colab_package/
 dist/
+*.whl
+*.egg
+
+# Images et médias volumineux
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.mp4
+*.avi
+*.mov
+*.mp3
+*.wav
+*.pdf
+*.doc
+*.docx
 
 # Cache et temporaires
 __pycache__/
@@ -41,14 +80,27 @@ logs/
 checkpoints/
 outputs/
 .pytest_cache/
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
 
 # Environnements
 .venv/
 venv/
 .env
+.env.local
+.env.production
 ENV/
 env.bak/
 venv.bak/
+.conda/
 
 # IDE et éditeurs
 .vscode/
@@ -56,20 +108,58 @@ venv.bak/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Git
 .git/
 *.orig
+*.rej
+*.patch
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+profile_default/
+ipython_config.py
 
-# Build
+# Build et distribution
 build/
 dist/
 *.egg-info/
+.eggs/
+*.manifest
+*.spec
+.Python
+
+# Fichiers volumineux spécifiques
+100MB
+large_file_*
+big_data_*
+massive_*
+
+# Sauvegardes et temporaires
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# Configuration secrets
+config.json
+secrets.json
+api_keys.txt
+credentials.json
