@@ -1,0 +1,17 @@
+# Dépendances Python pour l'analyse de sentiment
+
+# Framework web
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Traitement des requêtes
+requests>=2.31.0
+
+# Utilitaires Python
+pathlib2>=2.3.0
+
+# Tests (optionnel)
+pytest>=7.0.0
+
+# Note: Les dépendances ML (transformers, torch) sont optionnelles
+# L'application fonctionne en mode mock sans elles pour les démonstrations

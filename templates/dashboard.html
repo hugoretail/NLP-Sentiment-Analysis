@@ -1,1 +1,78 @@
-<!DOCTYPE html><html lang="fr"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>🎯 Analyse de Sentiment - Dashboard</title>    <style>        * { margin: 0; padding: 0; box-sizing: border-box; }        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }        .header { text-align: center; color: white; margin-bottom: 30px; }        .header h1 { font-size: 2.5em; margin-bottom: 10px; }        .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }        .input-group { margin-bottom: 20px; }        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }        .input-group textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical; min-height: 100px; }        .btn { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: transform 0.2s; }        .btn:hover { transform: translateY(-2px); }        .result { margin-top: 20px; padding: 20px; border-radius: 8px; }        .result.positive { background: #d4edda; border-left: 4px solid #28a745; }        .result.negative { background: #f8d7da; border-left: 4px solid #dc3545; }        .result.neutral { background: #d1ecf1; border-left: 4px solid #17a2b8; }        .stars { font-size: 24px; margin: 10px 0; }        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }        .stats { text-align: center; }        .stats h3 { color: #667eea; margin-bottom: 15px; }        .stat-item { display: inline-block; margin: 10px; padding: 15px; background: #f8f9fa; border-radius: 8px; }        .loading { display: none; text-align: center; color: #667eea; }        .history { max-height: 300px; overflow-y: auto; }        .history-item { padding: 10px; border-bottom: 1px solid #eee; }    </style></head><body>    <div class="container">        <div class="header">            <h1>🎯 Analyse de Sentiment</h1>            <p>Intelligence Artificielle pour l'analyse des émotions</p>        </div>        <div class="grid">            <div class="card">                <h3>📝 Analyse de Texte</h3>                <div class="input-group">                    <label for="textInput">Entrez votre texte :</label>                    <textarea id="textInput" placeholder="Tapez votre message ici..."></textarea>                </div>                <button class="btn" onclick="analyzeText()">🔍 Analyser</button>                                <div class="loading" id="loading">                    <p>⏳ Analyse en cours...</p>                </div>                                <div id="result" class="result" style="display: none;">                    <h4>📊 Résultat :</h4>                    <div class="stars" id="stars"></div>                    <p><strong>Score :</strong> <span id="score"></span>/5</p>                    <p><strong>Label :</strong> <span id="label"></span></p>                    <p><strong>Confiance :</strong> <span id="confidence"></span>%</p>                </div>            </div>            <div class="card">                <div class="stats">                    <h3>📈 Statistiques</h3>                    <div class="stat-item">                        <strong id="totalPredictions">0</strong><br>                        <small>Prédictions</small>                    </div>                    <div class="stat-item">                        <strong id="avgScore">0.0</strong><br>                        <small>Score Moyen</small>                    </div>                    <div class="stat-item">                        <strong id="cacheHits">0</strong><br>                        <small>Cache Hits</small>                    </div>                </div>            </div>        </div>        <div class="card">            <h3>📚 Historique Récent</h3>            <div class="history" id="history">                <p style="text-align: center; color: #666;">Aucune prédiction encore...</p>            </div>        </div>    </div>    <script>        async function analyzeText() {            const text = document.getElementById('textInput').value.trim();            if (!text) {                alert('Veuillez entrer un texte');                return;            }            const loading = document.getElementById('loading');            const result = document.getElementById('result');                        loading.style.display = 'block';            result.style.display = 'none';            try {                const response = await fetch('/predict', {                    method: 'POST',                    headers: {                        'Content-Type': 'application/json',                    },                    body: JSON.stringify({ text: text })                });                const data = await response.json();                                if (data.success) {                    displayResult(data.prediction);                    updateStats();                    updateHistory();                } else {                    alert('Erreur: ' + (data.error || 'Erreur inconnue'));                }            } catch (error) {                alert('Erreur de connexion: ' + error.message);            } finally {                loading.style.display = 'none';            }        }        function displayResult(prediction) {            const result = document.getElementById('result');            const stars = document.getElementById('stars');            const score = document.getElementById('score');            const label = document.getElementById('label');            const confidence = document.getElementById('confidence');            // Étoiles            const starCount = prediction.stars;            stars.innerHTML = '⭐'.repeat(starCount) + '☆'.repeat(5 - starCount);            score.textContent = prediction.score;            label.textContent = prediction.label;            confidence.textContent = Math.round(prediction.confidence * 100);            // Couleur selon le sentiment            result.className = 'result';            if (prediction.score >= 3.5) {                result.classList.add('positive');            } else if (prediction.score <= 2.5) {                result.classList.add('negative');            } else {                result.classList.add('neutral');            }            result.style.display = 'block';        }        async function updateStats() {            try {                const response = await fetch('/stats');                const data = await response.json();                                document.getElementById('totalPredictions').textContent = data.total_predictions;                document.getElementById('avgScore').textContent = data.average_score.toFixed(1);                document.getElementById('cacheHits').textContent = data.cache_hits;            } catch (error) {                console.error('Erreur stats:', error);            }        }        async function updateHistory() {            try {                const response = await fetch('/history');                const data = await response.json();                                const historyDiv = document.getElementById('history');                                if (data.history.length === 0) {                    historyDiv.innerHTML = '<p style="text-align: center; color: #666;">Aucune prédiction encore...</p>';                    return;                }                historyDiv.innerHTML = data.history.reverse().map(item => `                    <div class="history-item">                        <strong>${item.result.label}</strong> (${item.result.score}/5)                        <br><small>${item.text}</small>                    </div>                `).join('');            } catch (error) {                console.error('Erreur historique:', error);            }        }        // Charger les stats au démarrage        updateStats();        updateHistory();    </script></body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Analyse de Sentiment - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Analyse de Sentiment</h1>
+            <p>Intelligence Artificielle pour l'analyse des émotions</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>📝 Analyse de Texte</h3>
+                <div class="input-group">
+                    <label for="textInput">Entrez votre texte :</label>
+                    <textarea id="textInput" placeholder="Tapez votre message ici... (Ctrl+Enter pour analyser)"></textarea>
+                </div>
+                <button class="btn" onclick="analyzeText()">🔍 Analyser</button>
+                
+                <div class="loading" id="loading">
+                    <p>⏳ Analyse en cours...</p>
+                </div>
+                
+                <div id="result" class="result" style="display: none;">
+                    <h4>📊 Résultat :</h4>
+                    <div class="stars" id="stars"></div>
+                    <p><strong>Score :</strong> <span id="score"></span>/5</p>
+                    <p><strong>Label :</strong> <span id="label"></span></p>
+                    <p><strong>Confiance :</strong> <span id="confidence"></span>%</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="stats">
+                    <h3>📈 Statistiques</h3>
+                    <div class="stat-item">
+                        <strong id="totalPredictions">0</strong><br>
+                        <small>Prédictions</small>
+                    </div>
+                    <div class="stat-item">
+                        <strong id="avgScore">0.0</strong><br>
+                        <small>Score Moyen</small>
+                    </div>
+                    <div class="stat-item">
+                        <strong id="cacheHits">0</strong><br>
+                        <small>Cache Hits</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📚 Historique Récent</h3>
+            <div class="history" id="history">
+                <p style="text-align: center; color: #666; padding: 20px;">Aucune prédiction encore...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🛠️ Informations</h3>
+            <p><strong>Mode :</strong> Démonstration (modèle simulé)</p>
+            <p><strong>Version :</strong> GitHub Clean v1.0</p>
+            <p><strong>Raccourci :</strong> Ctrl+Enter pour analyser</p>
+            <p><strong>API :</strong> 
+                <a href="/health" target="_blank">Health Check</a> | 
+                <a href="/stats" target="_blank">Stats JSON</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
