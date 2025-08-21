@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis App</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-brain me-2"></i>
+                Sentiment Analyzer
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#analyze-tab" data-bs-toggle="tab">
+                            <i class="fas fa-search me-1"></i>Analyze
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#batch-tab" data-bs-toggle="tab">
+                            <i class="fas fa-list me-1"></i>Batch
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#compare-tab" data-bs-toggle="tab">
+                            <i class="fas fa-balance-scale me-1"></i>Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard-tab" data-bs-toggle="tab">
+                            <i class="fas fa-chart-bar me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#model-tab" data-bs-toggle="tab">
+                            <i class="fas fa-cog me-1"></i>Model Info
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Single Text Analysis Tab -->
+            <div class="tab-pane fade show active" id="analyze-tab" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-edit me-2"></i>Text Sentiment Analysis
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="sentiment-form">
+                                    <div class="mb-3">
+                                        <label for="text-input" class="form-label">Enter text to analyze:</label>
+                                        <textarea class="form-control" id="text-input" rows="4" 
+                                                placeholder="Type or paste your text here..." required></textarea>
+                                        <div class="form-text">
+                                            <span id="char-count">0</span> characters
+                                        </div>
+                                    </div>
+                                    <div class="d-grid gap-2 d-md-flex">
+                                        <button type="submit" class="btn btn-primary flex-fill" id="analyze-btn">
+                                            <i class="fas fa-search me-2"></i>Analyze Sentiment
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="clear-btn">
+                                            <i class="fas fa-trash me-2"></i>Clear
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Quick Examples -->
+                                <div class="mt-4">
+                                    <h6>Quick Examples:</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-outline-primary btn-sm example-btn" 
+                                                data-text="I absolutely love this product! It exceeded all my expectations.">
+                                            Positive Example
+                                        </button>
+                                        <button class="btn btn-outline-warning btn-sm example-btn" 
+                                                data-text="The product is okay, nothing special but it works fine.">
+                                            Neutral Example
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm example-btn" 
+                                                data-text="Terrible quality and waste of money. Very disappointed.">
+                                            Negative Example
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <!-- Result Card -->
+                        <div class="card shadow-sm" id="result-card" style="display: none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>Analysis Result
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Star Rating -->
+                                <div class="text-center mb-3">
+                                    <div class="star-rating mb-2" id="star-rating">
+                                        <!-- Stars will be generated by JavaScript -->
+                                    </div>
+                                    <h4 class="mb-0" id="sentiment-score">0.0/5.0</h4>
+                                    <small class="text-muted" id="sentiment-class">Neutral</small>
+                                </div>
+                                
+                                <!-- Confidence Bar -->
+                                <div class="mb-3">
+                                    <label class="form-label small">Confidence Level</label>
+                                    <div class="progress">
+                                        <div class="progress-bar" id="confidence-bar" role="progressbar" 
+                                             style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="confidence-text">0%</small>
+                                </div>
+                                
+                                <!-- Interpretation -->
+                                <div class="alert alert-info" id="interpretation" style="display: none;">
+                                    <!-- Interpretation text will be filled by JavaScript -->
+                                </div>
+                                
+                                <!-- Processing Time -->
+                                <div class="small text-muted" id="processing-time">
+                                    Processing time: 0ms
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading Spinner -->
+                        <div class="card shadow-sm" id="loading-card" style="display: none;">
+                            <div class="card-body text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0">Analyzing sentiment...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Analysis Tab -->
+            <div class="tab-pane fade" id="batch-tab" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>Batch Sentiment Analysis
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="batch-form">
+                                    <div class="mb-3">
+                                        <label for="batch-input" class="form-label">Enter texts (one per line):</label>
+                                        <textarea class="form-control" id="batch-input" rows="8" 
+                                                placeholder="Line 1: First text to analyze
+Line 2: Second text to analyze
+Line 3: Third text to analyze
+..."></textarea>
+                                        <div class="form-text">
+                                            <span id="line-count">0</span> lines (max 100)
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-info" id="batch-analyze-btn">
+                                        <i class="fas fa-play me-2"></i>Analyze Batch
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <!-- Batch Results Summary -->
+                        <div class="card shadow-sm" id="batch-summary-card" style="display: none;">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Batch Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <h6 class="text-success" id="positive-count">0</h6>
+                                        <small>Positive</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h6 class="text-warning" id="neutral-count">0</h6>
+                                        <small>Neutral</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h6 class="text-danger" id="negative-count">0</h6>
+                                        <small>Negative</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <h6>Average Score</h6>
+                                    <h4 id="avg-score">0.0/5.0</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Batch Results Table -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm" id="batch-results-card" style="display: none;">
+                            <div class="card-header">
+                                <h5 class="mb-0">Detailed Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="batch-results-table">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Text</th>
+                                                <th>Score</th>
+                                                <th>Class</th>
+                                                <th>Confidence</th>
+                                                <th>Stars</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Results will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compare Tab -->
+            <div class="tab-pane fade" id="compare-tab" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-balance-scale me-2"></i>Compare Texts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="compare-form">
+                            <div id="compare-inputs">
+                                <div class="row mb-3 compare-input-row">
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control compare-label" placeholder="Label 1" value="Text 1">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <textarea class="form-control compare-text" rows="2" placeholder="Enter first text to compare..."></textarea>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger remove-compare-btn" disabled>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row mb-3 compare-input-row">
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control compare-label" placeholder="Label 2" value="Text 2">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <textarea class="form-control compare-text" rows="2" placeholder="Enter second text to compare..."></textarea>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-outline-danger remove-compare-btn">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn btn-outline-secondary" id="add-compare-btn">
+                                    <i class="fas fa-plus me-2"></i>Add Text
+                                </button>
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-balance-scale me-2"></i>Compare
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Comparison Results -->
+                        <div id="compare-results" style="display: none;">
+                            <hr>
+                            <h6>Comparison Results</h6>
+                            <div class="row" id="compare-cards">
+                                <!-- Comparison cards will be generated by JavaScript -->
+                            </div>
+                            
+                            <!-- Comparison Chart -->
+                            <div class="mt-4">
+                                <canvas id="compare-chart" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade" id="dashboard-tab" role="tabpanel">
+                <div class="row">
+                    <!-- Analytics Cards -->
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="total-analyses">0</h4>
+                                        <small>Total Analyses</small>
+                                    </div>
+                                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="avg-sentiment">0.0</h4>
+                                        <small>Average Sentiment</small>
+                                    </div>
+                                    <i class="fas fa-smile fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="avg-confidence">0%</h4>
+                                        <small>Avg Confidence</small>
+                                    </div>
+                                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="dominant-class">-</h4>
+                                        <small>Dominant Class</small>
+                                    </div>
+                                    <i class="fas fa-crown fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <!-- Charts -->
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Sentiment Distribution</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="sentiment-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Hourly Activity</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="hourly-activity-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <!-- Recent Activity -->
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Recent Analysis History</h6>
+                                <button class="btn btn-sm btn-outline-danger" id="clear-history-btn">
+                                    <i class="fas fa-trash me-1"></i>Clear History
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover" id="history-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Text</th>
+                                                <th>Score</th>
+                                                <th>Class</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- History will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Insights -->
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Insights</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="insights-list">
+                                    <p class="text-muted">No insights available yet. Start analyzing some text!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Info Tab -->
+            <div class="tab-pane fade" id="model-tab" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-robot me-2"></i>Model Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tbody id="model-info-table">
+                                        <!-- Model info will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>Performance Metrics
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless">
+                                    <tbody id="performance-metrics-table">
+                                        <!-- Performance metrics will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Runtime Statistics</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <h5 id="total-inferences">0</h5>
+                                        <small class="text-muted">Total Inferences</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5 id="avg-inference-time">0ms</h5>
+                                        <small class="text-muted">Avg Inference Time</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5 id="cache-hit-rate">0%</h5>
+                                        <small class="text-muted">Cache Hit Rate</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5 id="cache-size">0</h5>
+                                        <small class="text-muted">Cache Size</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-body">
+                <!-- Toast message will be filled by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
