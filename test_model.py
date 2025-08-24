@@ -16,7 +16,6 @@ def test_model_loading():
         
         print("✅ Model loaded successfully!")
         
-        # Test basic prediction
         test_text = "I love this product! It's amazing."
         result = predictor.predict_single(test_text)
         
@@ -24,14 +23,12 @@ def test_model_loading():
         print(f"Text: {test_text}")
         print(f"Result: {result}")
         
-        # Get model info
         model_info = predictor.get_model_info()
         print(f"\n📊 Model Information:")
         print(f"Model name: {model_info['model_name']}")
         print(f"Device: {model_info['device']}")
         print(f"Parameters: {model_info['num_parameters']:,}")
         
-        # Performance metrics
         metrics = model_info['performance_metrics']
         print(f"\n🎯 Performance Metrics:")
         print(f"Accuracy: {metrics['accuracy']:.4f}")
@@ -56,7 +53,6 @@ def test_inference_engine():
         print("\n🔄 Testing inference engine...")
         engine = SentimentInferenceEngine('models')
         
-        # Test detailed analysis
         test_text = "This product is absolutely fantastic!"
         result = engine.analyze_text_sentiment(test_text)
         
@@ -81,13 +77,11 @@ if __name__ == "__main__":
     print("🧪 Sentiment Analysis Model Test")
     print("=" * 50)
     
-    # Check if model directory exists
     if not os.path.exists('models'):
         print("❌ Model directory not found!")
         print("Please ensure the trained model files are in the 'models' directory.")
         sys.exit(1)
     
-    # Check for required model files
     required_files = ['config.json', 'model.safetensors', 'tokenizer.json', 'model_info.json']
     missing_files = []
     
@@ -100,7 +94,6 @@ if __name__ == "__main__":
         print("Please ensure all model files are present.")
         sys.exit(1)
     
-    # Run tests
     success = True
     success &= test_model_loading()
     success &= test_inference_engine()
